@@ -13,13 +13,18 @@ const PORT = process.env.PORT || 3001;
 // Update ALLOWED_ORIGIN in .env if you deploy the dashboard to a custom domain.
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "*";
 
+// Apply CORS to every route — must come before all route definitions.
 app.use(
   cors({
     origin: ALLOWED_ORIGIN,
-    methods: ["GET", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "x-api-key"],
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "x-api-key", "x-proxy-secret"],
+    optionsSuccessStatus: 200, // some sandboxed environments need 200 not 204
   })
 );
+
+// Explicitly handle preflight OPTIONS for all routes
+app.options("*", cors());
 
 app.use(express.json());
 
@@ -40,6 +45,7 @@ function authMiddleware(req, res, next) {
 }
 
 // ─── HEALTH ──────────────────────────────────────────────────────────────────
+// Defined after cors() middleware so CORS headers are present on this route too.
 app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
